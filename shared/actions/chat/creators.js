@@ -652,6 +652,10 @@ function setInboxFilter(filter: string): Constants.SetInboxFilter {
   return {payload: {filter}, type: 'chat:inboxFilter'}
 }
 
+function setInboxSmallTeamsExpanded(expanded: boolean): Constants.SetInboxSmallTeamsExpanded {
+  return {payload: {expanded}, type: 'chat:inboxSmallTeamsExpanded'}
+}
+
 function setInboxSearch(search: Array<string>): Constants.SetInboxSearch {
   return {payload: {search}, type: 'chat:inboxSearch'}
 }
@@ -758,6 +762,7 @@ export {
   selectAttachment,
   selectConversation,
   setInboxFilter,
+  setInboxSmallTeamsExpanded,
   setInboxSearch,
   setInboxUntrustedState,
   setInitialConversation,

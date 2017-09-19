@@ -355,6 +355,7 @@ export const StateRecord: KBRecord<T> = Record({
   localMessageStates: Map(),
   inbox: List(),
   inboxFilter: '',
+  inboxSmallTeamsExpanded: false,
   inboxSearch: List(),
   conversationStates: Map(),
   metaData: Map(),
@@ -392,6 +393,7 @@ export type State = KBRecord<{
   localMessageStates: Map<MessageKey, LocalMessageState>,
   inbox: List<InboxState>,
   inboxFilter: string,
+  inboxSmallTeamsExpanded: boolean,
   inboxSearch: List<string>,
   conversationStates: Map<ConversationIDKey, ConversationState>,
   finalizedState: FinalizedState,
@@ -535,6 +537,10 @@ export type SelectConversation = NoErrorTypedAction<
   {conversationIDKey: ?ConversationIDKey, fromUser: boolean}
 >
 export type SetInboxFilter = NoErrorTypedAction<'chat:inboxFilter', {filter: string}>
+export type SetInboxSmallTeamsExpanded = NoErrorTypedAction<
+  'chat:inboxSmallTeamsExpanded',
+  {expanded: boolean}
+>
 export type SetInboxSearch = NoErrorTypedAction<'chat:inboxSearch', {search: Array<string>}>
 export type SetInboxUntrustedState = NoErrorTypedAction<
   'chat:inboxUntrustedState',

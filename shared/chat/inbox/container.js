@@ -9,6 +9,7 @@ import {
   newChat,
   untrustedInboxVisible,
   setInboxFilter,
+  setInboxSmallTeamsExpanded,
   selectConversation,
 } from '../../actions/chat/creators'
 import {createSelector} from 'reselect'
@@ -24,6 +25,7 @@ const getSupersededByState = (state: TypedState) => state.chat.get('supersededBy
 const getAlwaysShow = (state: TypedState) => state.chat.get('alwaysShow')
 const getPending = (state: TypedState) => state.chat.get('pendingConversations')
 const getFilter = (state: TypedState) => state.chat.get('inboxFilter')
+const getSmallTeamsExpanded = (state: TypedState) => state.chat.get('inboxSmallTeamsExpanded')
 const getUnreadCounts = (state: TypedState) => state.chat.get('conversationUnreadCounts')
 
 const passesStringFilter = (filter: string, toCheck: string): boolean => {
@@ -118,14 +120,7 @@ const getBigRows = createSelector([getInbox, getFilter], (inbox, filter) => {
 })
 
 const getRows = createSelector(
-  [
-    getSimpleRows,
-    getBigRows,
-    getPending,
-    getFilter,
-    getUnreadCounts,
-    (_, smallTeamsExpanded) => smallTeamsExpanded,
-  ],
+  [getSimpleRows, getBigRows, getPending, getFilter, getUnreadCounts, getSmallTeamsExpanded],
   (smallIds, bigTeamToChannels, pending, filter, badgeCountMap, smallTeamsExpanded) => {
     const pids = I.List(pending.keySeq().map(k => ({conversationIDKey: k, type: 'small'})))
     const sids = I.List(smallIds.map(s => ({conversationIDKey: s, type: 'small'})))
@@ -198,21 +193,23 @@ const getRows = createSelector(
       rows,
       showBuildATeam,
       showSmallTeamsExpandDivider,
+      smallTeamsExpanded,
       smallTeamsHiddenBadgeCount,
       smallTeamsHiddenRowCount,
     }
   }
 )
 
-const mapStateToProps = (state: TypedState, {isActiveRoute, smallTeamsExpanded}) => {
+const mapStateToProps = (state: TypedState, {isActiveRoute}) => {
   const {
     bigTeamsBadgeCount,
     rows,
     showBuildATeam,
     showSmallTeamsExpandDivider,
+    smallTeamsExpanded,
     smallTeamsHiddenBadgeCount,
     smallTeamsHiddenRowCount,
-  } = getRows(state, smallTeamsExpanded)
+  } = getRows(state)
   const filter = getFilter(state)
 
   return {
@@ -225,6 +222,7 @@ const mapStateToProps = (state: TypedState, {isActiveRoute, smallTeamsExpanded})
     showBuildATeam,
     showNewConversation: state.chat.inSearch && state.chat.inboxSearch.isEmpty(),
     showSmallTeamsExpandDivider,
+    smallTeamsExpanded,
     smallTeamsHiddenBadgeCount,
     smallTeamsHiddenRowCount,
   }
@@ -243,6 +241,7 @@ const mapDispatchToProps = (dispatch: Dispatch, {focusFilter}) => ({
   onSelect: (conversationIDKey: ?Constants.ConversationIDKey) =>
     conversationIDKey && dispatch(selectConversation(conversationIDKey, true)),
   onSetFilter: (filter: string) => dispatch(setInboxFilter(filter)),
+  onSetSmallTeamsExpanded: (expanded: boolean) => dispatch(setInboxSmallTeamsExpanded(expanded)),
   onUntrustedInboxVisible: (converationIDKey, rowsVisible) =>
     dispatch(untrustedInboxVisible(converationIDKey, rowsVisible)),
 })
@@ -266,7 +265,8 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => ({
   ...dispatchProps,
   onSelectDown: () => dispatchProps.onSelect(findNextConvo(stateProps.rows, stateProps._selected, 1)),
   onSelectUp: () => dispatchProps.onSelect(findNextConvo(stateProps.rows, stateProps._selected, -1)),
-  smallTeamsExpanded: ownProps.smallTeamsExpanded && stateProps.showSmallTeamsExpandDivider, // only collapse if we're actually showing a divider
+  smallTeamsExpanded: stateProps.smallTeamsExpanded && stateProps.showSmallTeamsExpandDivider, // only collapse if we're actually showing a divider
+  toggleSmallTeamsExpanded: () => dispatchProps.onSetSmallTeamsExpanded(!stateProps.smallTeamsExpanded),
 })
 
 // Inbox is being loaded a ton by the navigator for some reason. we need a module-level helper
@@ -275,10 +275,8 @@ const throttleHelper = throttle(cb => cb(), 60 * 1000)
 
 export default compose(
   withState('filterFocusCount', 'setFilterFocusCount', 0),
-  withState('smallTeamsExpanded', 'setSmallTeamsExpanded', false),
   withHandlers({
     focusFilter: props => () => props.setFilterFocusCount(props.filterFocusCount + 1),
-    toggleSmallTeamsExpanded: props => () => props.setSmallTeamsExpanded(!props.smallTeamsExpanded),
   }),
   pausableConnect(mapStateToProps, mapDispatchToProps, mergeProps),
   lifecycle({
